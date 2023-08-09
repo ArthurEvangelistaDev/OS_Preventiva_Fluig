@@ -1,2 +1,3 @@
-# OS_Preventiva_Fluig
-OS Ordem de Serviço Preventiva Fluig
+# OS Preventiva Fluig
+
+Ordem de Serviço Preventiva eletrônica desenvolvida na plataforma Fluig

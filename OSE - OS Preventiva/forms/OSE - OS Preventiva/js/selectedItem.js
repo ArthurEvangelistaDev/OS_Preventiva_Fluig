@@ -30,7 +30,15 @@ function setSelectedZoomItem(selectedItem) {
 			document.getElementById("LOCALIZACAO").value = row["LOCALIZACAO"]
 			document.getElementById("CHAPARESP").value = row["CHAPARESP"]
 
-			document.getElementById("HORIMETROVENCIMENTO").value = +(row["ULTIMO_VENCIMENTO"])+ 250
+			try{
+				var c1 = DatasetFactory.createConstraint("IDOBJOF", row["IDOBJOF"], row["IDOBJOF"], ConstraintType.MUST);
+				var constraints = new Array(c1);
+				var dataset = DatasetFactory.getDataset("ds_OSE_Valida_HorimetroVencimento", null, constraints, null);
+				var linha = dataset.values[0];
+				document.getElementById("HORIMETROVENCIMENTO").value = +(linha["CAMPOLIVRE3"])+ 250;
+			} catch (e) {
+				document.getElementById("HORIMETROVENCIMENTO").value = +(row["ULTIMO_VENCIMENTO"])+ 250
+			}
 			
 			reloadZoomFilterValues("PLANODEMANUTENCAO", "IDOBJOF," + row["IDOBJOF"]);
 			
@@ -65,6 +73,7 @@ function setSelectedZoomItem(selectedItem) {
 	}
 	
 	if (selectedItem.inputId == "PLANODEMANUTENCAO") {
+		document.getElementById("IDPLANO").value = selectedItem["IDPLANO"]
 		criarTabelaItensManutencao(selectedItem["IDPLANO"])
 	}
 	

@@ -6,19 +6,19 @@ function createDataset(fields, constraints, sortFields) {
     var ds = ic.lookup(dataSource);
     var created = false;
 
-    var LOCAL = "%"
+    var objeto = "%"
 		
 		for (var i = 0; i < constraints.length; i++) {
 			log.info("const " + i + "------");
 			log.info("Chave " + i + ": " + constraints[i].fieldName);
 			log.info("Valor " + i + ": " + constraints[i].initialValue);
 
-			if (constraints[i].fieldName == "NOME") {
-				LOCAL = constraints[i].initialValue;
+			if (constraints[i].fieldName == "IDOBJOF") {
+				objeto = constraints[i].initialValue;
 			}
 		}
     
-    var myQuery = getQuery(LOCAL)
+    var myQuery = getQuery(objeto)
     	
     try {
         var conn = ds.getConnection();
@@ -43,11 +43,7 @@ function createDataset(fields, constraints, sortFields) {
 
                 var obj = rs.getObject(rs.getMetaData().getColumnName(i));
                 if (null != obj) {
-                	if (i == columnCount){
-                		Arr[i - 1] = converteDataBanco(rs.getObject(rs.getMetaData().getColumnName(i)).toString());
-                	} else {
-                		Arr[i - 1] = rs.getObject(rs.getMetaData().getColumnName(i)).toString();
-                	}
+                	Arr[i - 1] = rs.getObject(rs.getMetaData().getColumnName(i)).toString();
                 } else {
                     Arr[i - 1] = "null";
                 }
@@ -72,44 +68,24 @@ function createDataset(fields, constraints, sortFields) {
     return newDataset;
 }
 
-function getQuery(LOCAL){
+function getQuery(objeto){
 	
 	return "" +
-	"SELECT ILOCAL.CODLOCAL,\
-	ILOCAL.NOME AS LOCAL,\
-	OFOBJOFICINA.IDOBJOF,\
-	MAX(OFHISTINDICADOR.VALORMEDIDOR1) AS HORIMETRO,\
-	MAX(OFHISTINDICADOR.DATACOLETA) AS DATACOLETA\
+	"SELECT TOP 1\
+	TMOV.CODCOLIGADA,\
+	TMOV.IDMOV,\
+	TMOV.IDOBJOF,\
+	TMOV.CAMPOLIVRE3\
 	\
-	FROM OFOBJOFICINA (NOLOCK)\
+	FROM TMOV (NOLOCK)\
 	\
-	LEFT OUTER JOIN OFTIPOOBJ (NOLOCK)\
-	ON OFOBJOFICINA.IDTIPOOBJ = OFTIPOOBJ.IDTIPOOBJ\
+	WHERE TMOV.CODCOLIGADA = 1\
+	  AND TMOV.CODTMV = '1.1.22'\
+	  AND TMOV.STATUS <> 'C'\
+	  AND TMOV.IDOBJOF = '"+objeto+"'\
 	\
-	LEFT OUTER JOIN OFHISTINDICADOR (NOLOCK)\
-	ON OFOBJOFICINA.CODCOLIGADA = OFHISTINDICADOR.CODCOLIGADA AND OFOBJOFICINA.IDOBJOF = OFHISTINDICADOR.IDOBJOF\
-	\
-	JOIN ILOCAL (NOLOCK)\
-	ON OFOBJOFICINA.CODCOLIGADA = ILOCAL.CODCOLIGADA AND OFOBJOFICINA.CODLOCAL = ILOCAL.CODLOCAL\
-	\
-	WHERE OFOBJOFICINA.IDOBJOF NOT IN (SELECT OFOBJOFICINA.IDOBJOF\
-						FROM OFOBJOFICINA (NOLOCK)\
-						LEFT OUTER JOIN TMOV (NOLOCK)\
-						ON OFOBJOFICINA.CODCOLIGADA = TMOV.CODCOLIGADA AND OFOBJOFICINA.IDOBJOF = TMOV.IDOBJOF\
-						WHERE TMOV.CODTMV = '1.1.22'\
-						  AND TMOV.CODTMV NOT IN ('C', 'N'))\
-	  AND ( OFOBJOFICINA.IDOBJOF LIKE 'T%' )\
-	  AND ( OFOBJOFICINA.STATUS <> '9' )\
-	  AND ( OFTIPOOBJ.DESCRICAO NOT LIKE 'transmi%' )\
-	  AND ( OFTIPOOBJ.DESCRICAO NOT LIKE 'mot%' )\
-	  AND ( OFTIPOOBJ.DESCRICAO NOT LIKE 'caçam%' )\
-	\
-	  AND ILOCAL.NOME LIKE '%"+LOCAL+"%'\
-	\
-	GROUP BY ILOCAL.CODLOCAL, ILOCAL.NOME, OFOBJOFICINA.IDOBJOF\
-	\
-	ORDER BY ILOCAL.CODLOCAL ASC, ILOCAL.NOME ASC, OFOBJOFICINA.IDOBJOF ASC";
-
+	ORDER BY TMOV.IDMOV DESC";
+	
 }
 
 

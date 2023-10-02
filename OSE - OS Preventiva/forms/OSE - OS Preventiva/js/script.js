@@ -37,14 +37,26 @@ function showCamera(param) {
 }
 //==============================================================================================================================================
 function addLinhaTabela(tabela){
-	
+
 	wdkAddChild(tabela);
 
 }
 //==============================================================================================================================================
 function deleteLinhaTabela(campo, tabela){
 	
-	fnWdkRemoveChild(campo);
+	if (tabela != "TABELA_MAODEOBRA"){
+		fnWdkRemoveChild(campo);
+	} else {
+		if ((campo.closest('tr').querySelectorAll('.form-group.col-md-2 input')[0].value) == ""){
+			fnWdkRemoveChild(campo);
+		} else {
+			FLUIGC.toast({
+				title: 'Atenção: ',
+				message: 'Você não pode exluir um HHT que foi iniciado e pausado!',
+				type: 'info'
+			});
+		}
+	}
 
 }
 //==============================================================================================================================================
@@ -197,10 +209,10 @@ function justificaPlano(campo){
 }
 //==============================================================================================================================================
 function consultaRMdaOS(tabela){
-	
+
 	try{
-		var c1 = DatasetFactory.createConstraint("IDMOVOS", document.getElementById('OSNUMEROMOV').value,
-																document.getElementById('OSNUMEROMOV').value, ConstraintType.MUST);
+		var c1 = DatasetFactory.createConstraint("IDMOVOS", document.getElementById('OSIDMOV').value,
+																document.getElementById('OSIDMOV').value, ConstraintType.MUST);
 		
 		var constraints = new Array(c1);
 		var dataset = DatasetFactory.getDataset('ds_OSE_RM_Status',null,constraints,null);

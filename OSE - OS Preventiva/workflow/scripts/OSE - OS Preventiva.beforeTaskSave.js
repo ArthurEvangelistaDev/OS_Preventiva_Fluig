@@ -1,12 +1,36 @@
 function beforeTaskSave(colleagueId,nextSequenceId,userList){
 	
+	var login = fluigAPI.getUserService().getCurrent().getLogin();
+	var primeiraLetra = login.substring(0, 1).toUpperCase();
+	var restoDaString = login.slice(1);
+	var codusuario = primeiraLetra + restoDaString;
+	//=========================================================================================================================================================
+	var dataset = DatasetFactory.getDataset("ds_OSE_Valida_Acessos", 
+	        null, 
+	        [DatasetFactory.createConstraint("CODUSUARIO", codusuario, codusuario, ConstraintType.MUST)],
+	        null);
+	var temacesso = true
+	for(var i = 0; i < dataset.rowsCount; i++) {
+        if (dataset.getValue(i, "TEMACESSO") == 'FALSE'){temacesso = false};
+    }
+	
 	if (getValue("WKNumState") == "12"){
-		criacaoOSPreventiva();
+		if (temacesso){criacaoOSPreventiva()} else {throw "\n\nVocê não tem todos os acessos para proseguir com o processo!\n\n"}
 	}
 	
 	if (getValue("WKNumState") == "18" && getValue("WKNextState") == "13"){
 		validacaoHorimetroCorreto();
-		finalizacaoOSPreventiva();
+		if (temacesso){finalizacaoOSPreventiva()} else {throw "\n\nVocê não tem todos os acessos para proseguir com o processo!\n\n"}
+	}
+	//=========================================================================================================================================================
+	if ((getValue("WKNumState") == "0" || getValue("WKNumState") == "4") && hAPI.getCardValue("DATAINICIOOS") == ""){
+		var dataFormatada = getDataAtual();
+		hAPI.setCardValue("DATAINICIOOS", dataFormatada);
+	}
+	
+	if (nextSequenceId == "13"){
+		var dataFormatada = getDataAtual();
+		hAPI.setCardValue("DATATERMINOOS", dataFormatada);
 	}
 	
 }
@@ -92,7 +116,9 @@ function criacaoOSPreventiva(){
 		"<CODTB1FAT>02</CODTB1FAT>"+
 		"<CODTB3FAT>05</CODTB3FAT>"+
 		"<HISTORICOLONGO> </HISTORICOLONGO>"+
-		"<IDOBJOF>"+hAPI.getCardValue("OBJETODEMANUTENCAO")+"</IDOBJOF>";
+		"<CODAGENDAMENTO>"+hAPI.getCardValue("IDPLANO")+"</CODAGENDAMENTO>"+
+		"<IDOBJOF>"+hAPI.getCardValue("OBJETODEMANUTENCAO")+"</IDOBJOF>"+
+		"<CAMPOLIVRE3>"+hAPI.getCardValue("HORIMETROVENCIMENTO")+"</CAMPOLIVRE3>";
 		if (hAPI.getCardValue("CHAPARESP") == "NÃO PREENCHIDO NO TOTVS"){
 			xml = xml+"<CHAPARESP>004738</CHAPARESP>"
 		} else {
@@ -325,4 +351,21 @@ function getWebService(usuario, senha){
 	
 	return authService;
 
+}
+
+function getDataAtual(){
+	// Obtém a data e hora atuais
+	var dataAtual = new Date();
+	
+	// Extrai as partes necessárias da data e hora
+	var dia = dataAtual.getDate() < 10 ? '0' + dataAtual.getDate() : dataAtual.getDate();
+	var mes = (dataAtual.getMonth() + 1) < 10 ? '0' + (dataAtual.getMonth() + 1) : (dataAtual.getMonth() + 1); // Mês começa em zero
+	var ano = dataAtual.getFullYear();
+	var hora = dataAtual.getHours() < 10 ? '0' + dataAtual.getHours() : dataAtual.getHours();
+	var minutos = dataAtual.getMinutes() < 10 ? '0' + dataAtual.getMinutes() : dataAtual.getMinutes();
+
+	// Formata a data e hora no padrão desejado
+	var dataFormatada = dia + '/' + mes + '/' + ano + ' - ' + hora + ':' + minutos;
+
+	return dataFormatada
 }
